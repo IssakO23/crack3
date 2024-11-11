@@ -20,29 +20,47 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    // TODO: Read the hashes file into an array.
-    //   Use either a 2D array or an array of arrays.
-    //   Use the loadFile function from fileutil.c
-    //   Uncomment the appropriate statement.
     int size;
-    //char (*hashes)[HASH_LEN] = loadFile(argv[1], &size);
-    //char **hashes = loadFile(argv[1], &size);
+    char (*hashes)[HASH_LEN] = loadFile2D(argv[1], &size);
+    
     
     // CHALLENGE1: Sort the hashes using qsort.
-    
-    // TODO
+    qsort(hashes, size, sizeof(hashes[0]), (int (*)(const void *, const void *))strcmp);
+
     // Open the password file for reading.
+    FILE *dict = fopen(argv[2], "r");
+    if (!dict)
+    {
+        perror("Could not open dictionary file");
+        exit(1);
+    }
 
-    // TODO
-    // For each password, hash it, then use the array search
-    // function from fileutil.h to find the hash.
-    // If you find it, display the password and the hash.
-    // Keep track of how many hashes were found.
     // CHALLENGE1: Use binary search instead of linear search.
+    char word[PASS_LEN];
+    int cracked = 0;
 
-    // TODO
-    // When done with the file:
-    //   Close the file
-    //   Display the number of hashes found.
-    //   Free up memory.
+    while (fgets(word, sizeof(word), dict))
+    {
+        // trim newline
+        word[strcspn(word, "\n")] = '\0';
+        char *hash = md5(word, strlen(word));
+
+        // binary search for hash in sorted array
+        if (bsearch(hash, hashes, size, sizeof(hashes[0]), (int (*)(const void *, const void *))strcmp))
+        {
+            printf("Found: %s -> %s\n", hash, word);
+            cracked++;
+        }
+        // free the hash after use
+        free(hash);
+    }
+
+    // Close the file
+    fclose(dict);
+
+    // Display the number of hashes found.
+    printf("%d hashes cracked.\n", cracked);
+    
+    // Free up memory.
+    free2D(hashes);
 }
